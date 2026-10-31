@@ -1,126 +1,360 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="SAI Lab — Research in artificial intelligence. Our website is coming soon.">
-  <meta name="theme-color" content="#f7f7f2">
-  <title>SAI Lab</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --paper: #f7f7f2;
-      --ink: #17283b;
-      --muted: #566371;
-      --accent: #2563c2;
-      --line: #d7ddd9;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: 100svh;
-      padding: clamp(24px, 5vw, 72px);
-      background: var(--paper);
-      color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-    .page {
-      max-width: 1120px;
-      min-height: calc(100vh - clamp(48px, 10vw, 144px));
-      min-height: calc(100svh - clamp(48px, 10vw, 144px));
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-    }
-    header, footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-    }
-    header { padding-bottom: 24px; border-bottom: 1px solid var(--line); }
-    .wordmark { font-size: 16px; font-weight: 700; letter-spacing: .08em; }
-    .domain { color: var(--muted); font-size: 14px; letter-spacing: .02em; }
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      padding: clamp(64px, 12vh, 160px) 0;
-    }
-    .eyebrow {
-      margin: 0 0 25px;
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 650;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-    }
-    h1 {
-      margin: 0;
-      font-size: clamp(64px, 13vw, 148px);
-      font-weight: 600;
-      letter-spacing: -.065em;
-      line-height: 1.05;
-    }
-    .accent { color: var(--accent); }
-    .subtitle {
-      max-width: 680px;
-      margin: 30px 0 0;
-      font-size: clamp(23px, 3.5vw, 38px);
-      font-weight: 400;
-      letter-spacing: -.03em;
-      line-height: 1.35;
-    }
-    .notice {
-      max-width: 480px;
-      margin: 26px 0 0;
-      color: var(--muted);
-      font-size: 17px;
-      line-height: 1.7;
-    }
-    footer {
-      padding-top: 22px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    .status { display: flex; align-items: center; gap: 9px; }
-    .status::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      flex: 0 0 auto;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-    @media (max-width: 420px) {
-      header { padding-bottom: 20px; }
-      footer { align-items: flex-start; flex-direction: column; gap: 10px; }
-      .notice { font-size: 16px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAI Lab</title>
+<meta name="description" content="SAI Lab — To Bridge the Gap between Artificial and Natural Intelligence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #000;
+    --paper: #fff;
+    --sans: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "DejaVu Sans Mono", ui-monospace, monospace;
+    --g: clamp(18px, 2.2vw, 32px);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  #contours { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; display: block; }
+
+  .top {
+    position: absolute; inset: 0 0 auto 0; z-index: 5;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding: var(--g);
+    font-size: 13px; pointer-events: none;
+  }
+  .top > * { pointer-events: auto; }
+  .top .brand { font-weight: 600; font-stretch: 118%; letter-spacing: -0.01em; }
+
+  .intro {
+    height: 50vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: end;
+    padding: 0 var(--g);
+  }
+  .intro p { grid-column: 2; margin: 0; max-width: 40ch; font-size: 16px; line-height: 1.35; background: var(--paper); padding: 2px 8px 4px 0; }
+
+  .book {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding: 12vh var(--g) 30vh;
+  }
+  /* contents */
+  .toc { position: sticky; top: 30vh; align-self: start; padding-right: var(--g); }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: inline-block; background: var(--paper); }
+  .toc li a { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); padding: 3px 10px 3px 0; font-size: 13px; }
+  .toc li a .t { overflow: hidden; text-overflow: ellipsis; }
+  .toc ol { max-width: 100%; }
+  .sec { min-width: 0; }
+  .toc li a .n { font-family: var(--mono); font-size: 11px; padding-top: 2px; }
+  .toc li a .box { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--ink); margin-right: 8px; vertical-align: -1px; }
+  .toc li a .box { position: relative; }
+  .toc li a .box i { position: absolute; inset: -1px; background: var(--ink); opacity: 0; }
+  .toc li a:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+  .toc li a .t { white-space: nowrap; }
+  .toc li a .tt { white-space: nowrap; }
+
+  /* sections */
+  .sec { max-width: 760px; background: var(--paper); scroll-margin-top: 14vh; }
+  .sec + .sec { margin-top: 22vh; }
+  .sec a.whole { display: block; outline: none; }
+  .head { display: flex; align-items: center; gap: 14px; font-family: var(--mono); font-size: 12px; }
+  .head .num { font-size: 12px; min-width: 1.5em; }
+  .head .rule { flex: 1; height: 1px; background: var(--ink); }
+  .figure { position: relative; margin: 22px 0 0; max-width: 620px; }
+  .figure .art { width: 100%; }
+  .figure .art canvas { display: block; }
+  .figure.unrevealed .art canvas { clip-path: inset(0 100% 0 0); }
+  .figure.revealing .art canvas { transition: clip-path 1.4s cubic-bezier(.2, .7, .2, 1); }
+  .figure figcaption { font-family: var(--mono); font-size: 11px; margin-top: 10px; }
+  .sec h2 {
+    margin: 28px 0 0; font-size: clamp(26px, 2.6vw, 38px); line-height: 1.05; letter-spacing: -0.02em; max-width: 20ch;
+    font-weight: 500; font-stretch: 116%;
+  }
+  /* weights are set per character by WeightWave (assets/weightwave.js) */
+  .sec p { margin: 14px 0 0; max-width: 48ch; }
+
+  footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding: 0 var(--g) var(--g); font-size: 12px; font-family: var(--mono); }
+  footer span { grid-column: 2; background: var(--paper); justify-self: start; }
+
+
+  @media (max-width: 820px) {
+    .top, .intro, .book, footer { grid-template-columns: 1fr; }
+    .intro p, footer span { grid-column: 1; }
+    .toc { display: none; }
+    .sec + .sec { margin-top: 14vh; }
+    /* one-row header; nav tightens up */
+    .top { display: flex; justify-content: space-between; align-items: baseline; }
+    /* the white ground of each item runs edge to edge, so background lines never touch the text */
+    .book { padding-left: 0; padding-right: 0; }
+    .sec { padding: 6px var(--g) 10px; }
+    .intro p { padding: 4px 8px 6px 0; }
+  }
+</style>
 </head>
 <body>
-  <div class="page">
-    <header>
-      <div class="wordmark">SAI LAB</div>
-      <div class="domain">sailab.ai</div>
-    </header>
-    <main>
-      <p class="eyebrow">Research in artificial intelligence</p>
-      <h1>SAI Lab<span class="accent" aria-hidden="true">.</span></h1>
-      <p class="subtitle">Our website is coming soon.</p>
-      <p class="notice">Research, people, and publications.<br>More to share soon.</p>
-    </main>
-    <footer>
-      <span>SAI Lab</span>
-      <span class="status">Website in progress</span>
-    </footer>
-  </div>
+<canvas id="contours" aria-hidden="true"></canvas>
+
+<header class="top">
+  <a class="brand" href="./">SAI Lab</a>
+</header>
+
+<section class="intro"><p id="line"></p></section>
+
+<div class="book" id="works">
+  <nav class="toc" aria-label="Works"><ol id="toc"></ol></nav>
+  <main id="feed"></main>
+</div>
+<footer><span>© 2026 SAI Lab</span></footer>
+
+<script src="assets/illus.js"></script>
+<script src="assets/weightwave.js"></script>
+<script src="assets/nablamimic-figure.js"></script>
+<script>
+(function () {
+  'use strict';
+  var P = [{
+    slug: 'nablamimic',
+    title: 'NablaMimic: Ultra-Efficient Humanoid Control with Differentiable Simulation',
+    short: 'NablaMimic: Humanoid Control with Differentiable Simulation',
+    date: '2026.10.29',
+    url: 'https://oamics.github.io/NablaMimic/',
+    feature: 'diffsim'
+  }];
+  document.getElementById('line').textContent = 'To Bridge the Gap between Artificial and Natural Intelligence.';
+  var feed = document.getElementById('feed'), toc = document.getElementById('toc');
+  /* only one figure runs at a time: the hovered item, otherwise the selected one
+     (the current item in the contents, or on a phone the item in the middle of the screen) */
+  var figs = [], hovered = -1, curIdx = -1, active = -1, pinnedI = -1;
+  function setActive() {
+    var k = hovered >= 0 ? hovered : (!WeightWave.canHover ? pinnedI : curIdx);
+    if (k === active) return;
+    if (active >= 0 && figs[active]) figs[active].stop();
+    active = k;
+    if (k >= 0 && figs[k]) figs[k].start();
+  }
+
+  P.forEach(function (p, i) {
+    var n = i + 1;
+    var li = document.createElement('li');
+    li.innerHTML = '<a href="#' + p.slug + '"><span class="n">' + n + '</span><span class="t"><span class="box"><i></i></span><span class="tt">' + (p.short || p.title) + '</span></span></a>';
+    toc.appendChild(li);
+
+    var s = document.createElement('article');
+    s.className = 'sec'; s.id = p.slug; s.dataset.i = i;
+    s.innerHTML =
+      '<a class="whole" href="' + p.url + '">' +
+        '<div class="head"><span class="num">' + n + '</span><span class="rule"></span><time>' + p.date + '</time></div>' +
+        '<figure class="figure"><div class="art"></div></figure>' +
+        '<h2>' + p.title + '</h2>' +
+      '</a>';
+    feed.appendChild(s);
+
+    var fig = s.querySelector('.figure'), art = s.querySelector('.art');
+    // figures are drawn once; only the selected item's figure runs (see setActive)
+    var ill = (p.feature === 'diffsim' ? FeatureDiffsim4.mount : Illus.mount)(art, {
+      kind: p.kind, style: 'lines', fg: '#000', bg: '#fff', cell: 7, ratio: 0.62,
+      animate: 'manual', manual: true, fps: p.feature ? 15 : 12, speed: 0.12, t0: 1 + i * 0.8
+    });
+    figs.push(ill);
+    var link = s.querySelector('a.whole');
+    link.addEventListener('pointerenter', function () { hovered = i; setActive(); });
+    link.addEventListener('pointerleave', function () { if (hovered === i) hovered = -1; setActive(); });
+
+    // the figure is unveiled left to right the first time it enters the view: the drawing is
+    // rendered once and a mask opens over it, so nothing is recomputed per frame
+    if (!Illus.reduced && 'IntersectionObserver' in window) {
+      fig.classList.add('unrevealed');
+      var io = new IntersectionObserver(function (es) {
+        if (!es[0].isIntersecting) return;
+        io.disconnect();
+        fig.classList.add('revealing');
+        requestAnimationFrame(function () { requestAnimationFrame(function () { fig.classList.remove('unrevealed'); }); });
+      }, { threshold: 0.25 });
+      io.observe(fig);
+    }
+  });
+
+  // variable weight: titles ride a weight wave under the pointer; the contents list uses the
+  // same axis for its selected item, and a smaller wave on hover
+  var titleWaves = [];
+  document.querySelectorAll('.sec').forEach(function (sec) {
+    titleWaves.push(WeightWave.attach(sec.querySelector('a.whole'), sec.querySelector('h2'), {
+      rest: function () { return [500, 116]; }, hover: 700, peak: 130, sigma: 80, offset: 44, give: 0.045, focus: 760, freeze: true
+    }));
+  });
+  // document positions of sections and titles, measured once and on resize, never while scrolling
+  var secTop = [], headMid = [];
+  function measure() {
+    secTop = []; headMid = [];
+    document.querySelectorAll('.sec').forEach(function (sec) {
+      secTop.push(sec.getBoundingClientRect().top + scrollY);
+      var r = sec.querySelector('h2').getBoundingClientRect(); headMid.push(r.top + scrollY + r.height / 2);
+    });
+  }
+  measure();
+  addEventListener('resize', function () { measure(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { setTimeout(measure, 200); });
+  setTimeout(measure, 1500);
+
+  // phones and tablets have no hover: the title closest to the middle of the screen is held heavy
+  if (!WeightWave.canHover) {
+    var pt = false;
+    var pinCentre = function () {
+      pt = false;
+      var mid = scrollY + innerHeight * 0.5, best = -1, bd = innerHeight * 0.32;
+      for (var k = 0; k < headMid.length; k++) { var d = Math.abs(headMid[k] - mid); if (d < bd) { bd = d; best = k; } }
+      if (best !== pinnedI) { pinnedI = best; titleWaves.forEach(function (w, k) { w.pin(k === best); }); setActive(); }
+    };
+    addEventListener('scroll', function () { if (!pt) { pt = true; requestAnimationFrame(pinCentre); } }, { passive: true });
+    addEventListener('resize', pinCentre);
+    pinCentre();
+  }
+  var tocWaves = [];
+  toc.querySelectorAll('li').forEach(function (li) {
+    tocWaves.push(WeightWave.attach(li.querySelector('a'), li.querySelector('.tt'), {
+      rest: function () { return li.classList.contains('on') ? [780, 100] : [400, 100]; },
+      hover: 560, peak: 150, sigma: 40, offset: 24, give: 0.03, focus: 760
+    }));
+  });
+
+  // contents: jump to exactly the section clicked, and keep the marker on it while scrolling there
+  var items = toc.querySelectorAll('li'), secs = document.querySelectorAll('.sec'), lockUntil = 0;
+  /* the marker never jumps: a head travels box by box from the old item to the new one,
+     filling each box as it passes; behind it the fills shrink away like an afterimage,
+     and each label it crosses swells briefly along the weight axis */
+  var fills = Array.prototype.map.call(items, function (l) { return l.querySelector('.box i'); });
+  var lvl = new Float32Array(items.length), hit = new Float64Array(items.length), head = -1, from = 0, goal = 0, t0m = 0, dur = 0, mraf = 0, mlast = 0, passed = -1;
+  function mark(i) {
+    curIdx = i; setActive();
+    if (i < 0) {
+      if (head < 0 && goal < 0) return;
+      items.forEach(function (l) { l.classList.remove('on'); });
+      tocWaves.forEach(function (w) { w.refresh(); });
+      cancelAnimationFrame(mraf); mraf = 0; head = -1; goal = -1; lvl.fill(0); hit.fill(0); paint();
+      return;
+    }
+    if (i === goal && head >= 0) return;
+    items.forEach(function (l, k) { l.classList.toggle('on', k === i); });
+    tocWaves.forEach(function (w) { w.refresh(); });
+    if (head < 0 || Illus.reduced) { head = goal = i; lvl.fill(0); lvl[i] = 1; paint(); return; }
+    from = head; goal = i; t0m = performance.now(); dur = Math.min(520, 120 + Math.abs(goal - from) * 50);
+    if (!mraf) { mlast = 0; mraf = requestAnimationFrame(moveMarker); }
+  }
+  function paint() { for (var k = 0; k < fills.length; k++) fills[k].style.opacity = lvl[k].toFixed(3); }
+  function moveMarker(now) {
+    var q = Math.min(1, (now - t0m) / dur), e = 1 - Math.pow(1 - q, 3);   // quick start, soft landing
+    var prev = head; head = from + (goal - from) * e;
+    // every box the head crosses is stamped with the moment it was crossed, even on a slow frame
+    var lo = Math.ceil(Math.min(prev, head) - 0.5), hi = Math.floor(Math.max(prev, head) + 0.5);
+    for (var c = lo; c <= hi; c++) if (c >= 0 && c < lvl.length && c !== goal) hit[c] = now;
+    var settled = q >= 1;
+    for (var k = 0; k < lvl.length; k++) {
+      if (k === goal && settled) { lvl[k] = 1; continue; }
+      var d = k - head, crest = Math.exp(-d * d / 0.16);       // the head itself: black
+      var wake = 0;
+      if (hit[k]) {
+        // the wake: grey that swells and ebbs a few times as it fades, like water after a pass
+        var age = (now - hit[k]) / 1000;
+        wake = Math.exp(-age * 7) * (0.55 + 0.45 * Math.cos(age * 20)) * 0.6;
+        if (age < 0.6) settled = false; else hit[k] = 0;
+      }
+      lvl[k] = Math.max(crest, wake);
+    }
+    var near = Math.round(head);
+    if (near !== passed) { passed = near; tocWaves.forEach(function (w, k) { w.pin(k === near && k !== goal && q < 1); }); }
+    paint();
+    if (settled) { for (var z = 0; z < lvl.length; z++) lvl[z] = z === goal ? 1 : 0; paint(); mraf = 0; head = goal; tocWaves.forEach(function (w) { w.pin(false); }); return; }
+    mraf = requestAnimationFrame(moveMarker);
+  }
+  items.forEach(function (li, i) {
+    li.querySelector('a').addEventListener('click', function (e) {
+      e.preventDefault();
+      var top = (secTop[i] != null ? secTop[i] : secs[i].getBoundingClientRect().top + scrollY) - innerHeight * 0.14;
+      mark(i); lockUntil = performance.now() + 1200;
+      scrollTo({ top: top, behavior: 'instant' });
+      history.replaceState(null, '', '#' + secs[i].id);
+    });
+  });
+  // the current section is the last one whose top has passed 40% of the screen
+  var ticking = false;
+  function current() {
+    ticking = false;
+    if (performance.now() < lockUntil) return;
+    // nothing is selected until the first item reaches the line
+    var line = scrollY + innerHeight * 0.4, cur = -1;
+    for (var k = 0; k < secTop.length; k++) if (secTop[k] <= line) cur = k;
+    mark(cur);
+  }
+  addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(current); } }, { passive: true });
+  current();
+
+  /* ---------- contour field: thin isolines that drift slowly; scrolling only nudges them.
+     Lines are never switched on or off: thresholds move continuously. ---------- */
+  var cv = document.getElementById('contours'), ctx = cv.getContext('2d');
+  var W, H, C, gw, gh, F;
+  function build() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    C = W < 820 ? 12 : 14;
+    gw = Math.ceil(W / C) + 1; gh = Math.ceil(H / C) + 1;
+    F = new Float32Array(gw * gh);
+  }
+  var t = 0, last = 0, ly = scrollY, vel = 0;
+  // every level is always drawn; a level "leaves" by sliding its threshold out past the edge
+  // of the field's range, so its lines shrink into islands and close up instead of vanishing
+  var LEVELS = [0.5, 0.36, 0.64, 0.43], PRES = [1, 1, 1, 0];
+  var EX = new Float32Array(4), EY = new Float32Array(4);
+  function frame(now) {
+    if (!Illus.reduced) requestAnimationFrame(frame);
+    var dt = Math.min(0.08, (now - (last || now)) / 1000); last = now;
+    var y = scrollY, v = (y - ly) / Math.max(dt, 1 / 120); ly = y;
+    vel += (v - vel) * 0.03;
+    var heat = Math.min(Math.abs(vel) / 5000, 0.35);
+    t += dt * (0.04 + heat * 0.12);
+    var sc = 0.0021, oy = y * 0.18; // the field drifts with the page, much slower than the text
+    for (var j = 0; j < gh; j++) for (var i = 0; i < gw; i++) {
+      var X = i * C * sc, Y = (j * C + oy) * sc;
+      var w = Illus.noise3(X * 0.6 + 9, Y * 0.6, t * 0.7) * (1.2 + heat * 0.5);
+      F[j * gw + i] = Illus.fbm(X + w, Y - w * 0.6, t, 3);
+    }
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    var richness = 1 - Illus.sstep(H * 0.15, H * 0.9, y);   // fuller in the first screen
+    var want = [1, richness, richness, Illus.sstep(0.12, 0.35, heat)];
+    var ease = Math.min(1, dt * 0.6);
+    for (var L = 0; L < LEVELS.length; L++) {
+      PRES[L] += (want[L] - PRES[L]) * ease;
+      if (PRES[L] < 0.002) continue;
+      var edge = LEVELS[L] < 0.5 ? 0.1 : 0.9;
+      var pr = PRES[L] * PRES[L] * (3 - 2 * PRES[L]);
+      var iso = edge + (LEVELS[L] - edge) * pr;
+      for (j = 0; j < gh - 1; j++) for (i = 0; i < gw - 1; i++) {
+        var a = F[j * gw + i], b = F[j * gw + i + 1], c = F[(j + 1) * gw + i + 1], d = F[(j + 1) * gw + i];
+        var idx = (a > iso ? 8 : 0) | (b > iso ? 4 : 0) | (c > iso ? 2 : 0) | (d > iso ? 1 : 0);
+        if (idx === 0 || idx === 15) continue;
+        var x = i * C, yy = j * C;
+        EX[0] = x + C * (iso - a) / (b - a); EY[0] = yy;
+        EX[1] = x + C;                       EY[1] = yy + C * (iso - b) / (c - b);
+        EX[2] = x + C * (iso - d) / (c - d); EY[2] = yy + C;
+        EX[3] = x;                           EY[3] = yy + C * (iso - a) / (d - a);
+        var segs = SEG[idx];
+        for (var s = 0; s < segs.length; s += 2) { ctx.moveTo(EX[segs[s]], EY[segs[s]]); ctx.lineTo(EX[segs[s + 1]], EY[segs[s + 1]]); }
+      }
+    }
+    ctx.stroke();
+  }
+  // edges: 0 top, 1 right, 2 bottom, 3 left
+  var SEG = { 1: [3, 2], 2: [2, 1], 3: [3, 1], 4: [0, 1], 5: [3, 0, 2, 1], 6: [0, 2], 7: [3, 0], 8: [3, 0], 9: [0, 2], 10: [0, 1, 3, 2], 11: [0, 1], 12: [3, 1], 13: [2, 1], 14: [3, 2] };
+  build();
+  addEventListener('resize', build);
+  requestAnimationFrame(frame);
+  if (Illus.reduced) addEventListener('scroll', function () { last = 0; requestAnimationFrame(frame); }, { passive: true });
+  setActive();
+})();
+</script>
 </body>
 </html>
