@@ -20,6 +20,10 @@
   html { background: var(--paper); }
   body { margin: 0; color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
   a { color: inherit; text-decoration: none; }
+  /* no grey/black rectangle when an item is tapped or clicked: the item is not a box */
+  a { -webkit-tap-highlight-color: transparent; }
+  a:focus:not(:focus-visible) { outline: none; }
+  .sec a.whole { -webkit-touch-callout: none; }
 
   #contours { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; display: block; }
 
@@ -35,14 +39,14 @@
     height: 50vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: end;
     padding: 0 var(--g);
   }
-  .intro p { grid-column: 2; margin: 0; max-width: 40ch; font-size: 16px; line-height: 1.35; background: var(--paper); padding: 2px 8px 4px 0; }
+  .intro p { grid-column: 2; margin: 0; max-width: 40ch; font-size: 16px; line-height: 1.35; padding: 2px 8px 4px 0; }
 
   .book {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding: 12vh var(--g) 30vh;
   }
   /* contents */
   .toc { position: sticky; top: 30vh; align-self: start; padding-right: var(--g); }
-  .toc ol { list-style: none; margin: 0; padding: 0; display: inline-block; background: var(--paper); }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: inline-block; }
   .toc li a { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); padding: 3px 10px 3px 0; font-size: 13px; }
   .toc li a .t { overflow: hidden; text-overflow: ellipsis; }
   .toc ol { max-width: 100%; }
@@ -56,7 +60,7 @@
   .toc li a .tt { white-space: nowrap; }
 
   /* sections */
-  .sec { max-width: 760px; background: var(--paper); scroll-margin-top: 14vh; }
+  .sec { max-width: 760px; scroll-margin-top: 14vh; }
   .sec + .sec { margin-top: 22vh; }
   .sec a.whole { display: block; outline: none; }
   .head { display: flex; align-items: center; gap: 14px; font-family: var(--mono); font-size: 12px; }
@@ -76,7 +80,7 @@
   .sec p { margin: 14px 0 0; max-width: 48ch; }
 
   footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding: 0 var(--g) var(--g); font-size: 12px; font-family: var(--mono); }
-  footer span { grid-column: 2; background: var(--paper); justify-self: start; }
+  footer span { grid-column: 2; justify-self: start; }
 
 
   @media (max-width: 820px) {
@@ -86,7 +90,6 @@
     .sec + .sec { margin-top: 14vh; }
     /* one-row header; nav tightens up */
     .top { display: flex; justify-content: space-between; align-items: baseline; }
-    /* the white ground of each item runs edge to edge, so background lines never touch the text */
     .book { padding-left: 0; padding-right: 0; }
     .sec { padding: 6px var(--g) 10px; }
     .intro p { padding: 4px 8px 6px 0; }
@@ -119,7 +122,7 @@
     title: 'NablaMimic: Ultra-Efficient Humanoid Control with Differentiable Simulation',
     short: 'NablaMimic: Humanoid Control with Differentiable Simulation',
     date: '2026.10.29',
-    url: 'nablamimic/',
+    url: 'https://oamics.github.io/NablaMimic/',
     feature: 'diffsim'
   }];
   document.getElementById('line').textContent = 'To Bridge the Gap between Artificial and Natural Intelligence.';
@@ -290,6 +293,53 @@
   addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(current); } }, { passive: true });
   current();
 
+  /* ---------- keep-out shapes for the background ----------
+     Instead of white boxes, the contour lines stop short of the content. Each text line gets its
+     own shape, the width of its words only, so a short last line leaves the rest of the row open.
+     Shapes are rounded (a padded distance around each rect), and a line that meets one simply
+     ends there, cut square to its own direction, as if it thinned out rather than being covered. */
+  var KEEP = [], KEEP_FIXED = [], tocEl = document.querySelector('.toc'), tocBase = null;
+  function lineRects(el, pad, out, fixedTo) {
+    if (!el || !el.offsetParent && getComputedStyle(el).position !== 'fixed') return;
+    var rg = document.createRange(); rg.selectNodeContents(el);
+    var rs = rg.getClientRects(), rows = [];
+    for (var k = 0; k < rs.length; k++) {
+      var r = rs[k]; if (r.width < 1 || r.height < 1) continue;
+      var row = null;
+      for (var q = 0; q < rows.length; q++) { var w = rows[q]; if (r.top < w.b - 2 && r.bottom > w.t + 2) { row = w; break; } }
+      if (row) { row.l = Math.min(row.l, r.left); row.r = Math.max(row.r, r.right); row.t = Math.min(row.t, r.top); row.b = Math.max(row.b, r.bottom); }
+      else rows.push({ l: r.left, r: r.right, t: r.top, b: r.bottom });
+    }
+    var oy = fixedTo ? fixedTo.top : -scrollY, ox = fixedTo ? fixedTo.left : 0;
+    rows.forEach(function (w) { out.push({ l: w.l - ox, r: w.r - ox, t: w.t - oy, b: w.b - oy, p: pad }); });
+  }
+  function boxRect(el, pad, out) {
+    if (!el) return; var r = el.getBoundingClientRect(); if (r.width < 1) return;
+    out.push({ l: r.left, r: r.right, t: r.top + scrollY, b: r.bottom + scrollY, p: pad });
+  }
+  function measureKeep() {
+    var K = [], F = [];
+    lineRects(document.querySelector('.top .brand'), 10, K);
+    lineRects(document.getElementById('line'), 10, K);
+    document.querySelectorAll('.sec').forEach(function (sec) {
+      boxRect(sec.querySelector('.head'), 8, K);
+      boxRect(sec.querySelector('.art'), 12, K);
+      lineRects(sec.querySelector('h2'), 10, K);
+      lineRects(sec.querySelector('p'), 10, K);
+    });
+    lineRects(document.querySelector('footer span'), 10, K);
+    // the contents list is sticky: its shapes are kept relative to the list and placed each frame
+    if (tocEl && getComputedStyle(tocEl).display !== 'none') {
+      tocBase = tocEl.getBoundingClientRect();
+      document.querySelectorAll('#toc li a').forEach(function (a) { lineRects(a, 9, F, tocBase); });
+    }
+    KEEP = K; KEEP_FIXED = F;
+  }
+  measureKeep();
+  addEventListener('resize', measureKeep);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { setTimeout(measureKeep, 250); });
+  setInterval(measureKeep, 700);           // titles change width a little as their weight moves
+
   /* ---------- contour field: thin isolines that drift slowly; scrolling only nudges them.
      Lines are never switched on or off: thresholds move continuously. ---------- */
   var cv = document.getElementById('contours'), ctx = cv.getContext('2d');
@@ -306,7 +356,49 @@
   // every level is always drawn; a level "leaves" by sliding its threshold out past the edge
   // of the field's range, so its lines shrink into islands and close up instead of vanishing
   var LEVELS = [0.5, 0.36, 0.64, 0.43], PRES = [1, 1, 1, 0];
-  var EX = new Float32Array(4), EY = new Float32Array(4);
+  var EX = new Float32Array(4), EY = new Float32Array(4), VIS = [];
+  // distance from (x, y) to the nearest keep-out shape, minus its padding (negative = inside)
+  function keepDist(x, y) {
+    var best = 1e9;
+    for (var k = 0; k < VIS.length; k++) {
+      var R = VIS[k];
+      var dx = x < R.l ? R.l - x : x > R.r ? x - R.r : 0, dy = y < R.t ? R.t - y : y > R.b ? y - R.b : 0;
+      var d = (dx || dy ? Math.sqrt(dx * dx + dy * dy) : 0) - R.p;
+      if (d < best) best = d;
+    }
+    return best;
+  }
+  // where along a->b the line crosses the edge of a shape (a outside, b inside, or the reverse)
+  function edgeAt(ax, ay, bx, by, aIn) {
+    var lo = 0, hi = 1;
+    for (var it = 0; it < 7; it++) {
+      var m = (lo + hi) / 2, inM = keepDist(ax + (bx - ax) * m, ay + (by - ay) * m) < 0;
+      if (inM === aIn) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  }
+  function seg(x0, y0, x1, y1) {
+    if (!VIS.length) { ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); return; }
+    var mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    var i0 = keepDist(x0, y0) < 0, i1 = keepDist(x1, y1) < 0, im = keepDist(mx, my) < 0;
+    if (!i0 && !i1 && !im) { ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); return; }
+    if (i0 && i1 && im) return;
+    // split at the midpoint and trim each half to the edge
+    half(x0, y0, mx, my, i0, im); half(mx, my, x1, y1, im, i1);
+  }
+  function half(ax, ay, bx, by, aIn, bIn) {
+    if (aIn && bIn) return;
+    if (!aIn && !bIn) { ctx.moveTo(ax, ay); ctx.lineTo(bx, by); return; }
+    var u = edgeAt(ax, ay, bx, by, aIn), ex = ax + (bx - ax) * u, ey = ay + (by - ay) * u;
+    if (aIn) piece(ex, ey, bx, by); else piece(ax, ay, ex, ey);
+  }
+  // a trimmed end that is only a sliver is left out, so no stray specks sit between shapes
+  function piece(x0, y0, x1, y1) {
+    var dx = x1 - x0, dy = y1 - y0;
+    // a short piece whose both ends sit on shapes is a bridge between two of them: leave it out
+    if (dx * dx + dy * dy < 400 && keepDist(x0, y0) < 1.5 && keepDist(x1, y1) < 1.5) return;
+    ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+  }
   function frame(now) {
     if (!Illus.reduced) requestAnimationFrame(frame);
     var dt = Math.min(0.08, (now - (last || now)) / 1000); last = now;
@@ -321,7 +413,18 @@
       F[j * gw + i] = Illus.fbm(X + w, Y - w * 0.6, t, 3);
     }
     ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+    // the shapes that touch the screen this frame, in screen coordinates
+    VIS = [];
+    for (var k = 0; k < KEEP.length; k++) {
+      var K = KEEP[k], t0 = K.t - y, b0 = K.b - y;
+      if (b0 + K.p < 0 || t0 - K.p > H) continue;
+      VIS.push({ l: K.l, r: K.r, t: t0, b: b0, p: K.p });
+    }
+    if (KEEP_FIXED.length && tocEl) {
+      var tb = tocEl.getBoundingClientRect();
+      for (k = 0; k < KEEP_FIXED.length; k++) { var Fk = KEEP_FIXED[k]; VIS.push({ l: Fk.l + tb.left, r: Fk.r + tb.left, t: Fk.t + tb.top, b: Fk.b + tb.top, p: Fk.p }); }
+    }
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.lineCap = 'butt';
     ctx.beginPath();
     var richness = 1 - Illus.sstep(H * 0.15, H * 0.9, y);   // fuller in the first screen
     var want = [1, richness, richness, Illus.sstep(0.12, 0.35, heat)];
@@ -342,7 +445,7 @@
         EX[2] = x + C * (iso - d) / (c - d); EY[2] = yy + C;
         EX[3] = x;                           EY[3] = yy + C * (iso - a) / (d - a);
         var segs = SEG[idx];
-        for (var s = 0; s < segs.length; s += 2) { ctx.moveTo(EX[segs[s]], EY[segs[s]]); ctx.lineTo(EX[segs[s + 1]], EY[segs[s + 1]]); }
+        for (var s = 0; s < segs.length; s += 2) seg(EX[segs[s]], EY[segs[s]], EX[segs[s + 1]], EY[segs[s + 1]]);
       }
     }
     ctx.stroke();

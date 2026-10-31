@@ -7,6 +7,10 @@
 (function () {
   'use strict';
   var canHover = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var lastInput = 'pointer';
+  addEventListener('keydown', function (e) { if (e.key === 'Tab') lastInput = 'key'; }, true);
+  addEventListener('pointerdown', function () { lastInput = 'pointer'; }, true);
+  addEventListener('pageshow', function () { lastInput = 'pointer'; });
 
   function split(el) {
     var text = el.textContent, words = text.split(/(\s+)/), chars = [];
@@ -87,7 +91,8 @@
       region.addEventListener('pointermove', function (e) { mx = e.clientX; kick(); });
       region.addEventListener('pointerleave', function () { inside = false; kick(); });
     }
-    region.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches(':focus-visible')) { focused = true; kick(); } });
+    // even weight only for real keyboard focus: a click, a tap or coming back to the page never counts
+    region.addEventListener('focusin', function (e) { if (lastInput === 'key' && e.target.matches && e.target.matches(':focus-visible')) { focused = true; kick(); } });
     region.addEventListener('focusout', function () { focused = false; kick(); });
     chars.forEach(function (c) { c.el.style.fontWeight = c.w; c.el.style.fontStretch = c.s + '%'; });
     if (o.freeze) {
