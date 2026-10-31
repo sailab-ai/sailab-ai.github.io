@@ -1,0 +1,55 @@
+# Builds the SAI Lab site with the NablaMimic project page under /nablamimic/ and deploys it to GitHub Pages.
+# The project page is pulled from the private repo OamIcs/NablaMimic_pages at build time (read-only deploy key), so its
+# files never enter this repository's history.
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [nablamimic-updated]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lab site
+        uses: actions/checkout@v4
+        with:
+          path: lab
+      - name: NablaMimic project page
+        uses: actions/checkout@v4
+        with:
+          repository: OamIcs/NablaMimic_pages
+          ref: main
+          path: nablamimic-src
+          ssh-key: ${{ secrets.NABLAMIMIC_PAGES_DEPLOY_KEY }}
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/nablamimic
+          rsync -a --exclude .git --exclude .github lab/ _site/
+          rsync -a --exclude .git --exclude .github --exclude README.md nablamimic-src/ _site/nablamimic/
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
