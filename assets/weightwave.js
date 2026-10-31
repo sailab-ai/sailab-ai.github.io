@@ -3,7 +3,8 @@
    character at a fixed offset to the right of the pointer is heaviest and the weight falls off
    smoothly on either side, the same x on every line. Width is given back as weight is added,
    so lines keep roughly their length; line breaks are frozen so nothing rewraps.
-   Keyboard focus gives the whole text one even weight. Touch screens get no wave. */
+   Keyboard focus gives the whole text one even weight. On touch screens the item held at the
+   centre follows a sideways finger instead. */
 (function () {
   'use strict';
   var canHover = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -93,6 +94,19 @@
       region.addEventListener('pointerenter', function (e) { inside = true; mx = e.clientX; kick(); });
       region.addEventListener('pointermove', function (e) { mx = e.clientX; kick(); });
       region.addEventListener('pointerleave', function () { inside = false; kick(); });
+    }
+    // touch screens: while this item is held (centred on screen), a sideways finger anywhere on the page drives the same wave
+    // as the mouse does on a desktop; a mostly vertical drag is a scroll and leaves it alone
+    if (!canHover) {
+      var t0 = null;
+      addEventListener('touchstart', function (e) { var t = e.touches[0]; t0 = t ? { x: t.clientX, y: t.clientY, side: false } : null; }, { passive: true });
+      addEventListener('touchmove', function (e) {
+        var t = e.touches[0]; if (!t || !t0 || !pinned) return;
+        if (!t0.side) { var dx = Math.abs(t.clientX - t0.x), dy = Math.abs(t.clientY - t0.y); if (dx < 8 || dx < dy * 1.2) return; t0.side = true; }
+        inside = true; mx = t.clientX; kick();
+      }, { passive: true });
+      var lift = function () { if (t0 && t0.side) { inside = false; kick(); } t0 = null; };
+      addEventListener('touchend', lift, { passive: true }); addEventListener('touchcancel', lift, { passive: true });
     }
     // even weight only for real keyboard focus: a click, a tap or coming back to the page never counts
     region.addEventListener('focusin', function (e) { if (lastInput === 'key' && e.target.matches && e.target.matches(':focus-visible')) { focused = true; kick(); } });
