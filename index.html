@@ -65,6 +65,9 @@
   .sec a.whole { display: block; outline: none; }
   .head { display: flex; align-items: center; gap: 14px; font-family: var(--mono); font-size: 12px; }
   .head .num { font-size: 12px; min-width: 1.5em; }
+  .head, .figure figcaption { transition: font-weight 0.15s; }
+  .sec a.whole.pressed .head, .sec a.whole.pressed figcaption { font-weight: 500; }
+  .sec a.whole.pressed .head .rule { height: 2px; }
   .head .rule { flex: 1; height: 1px; background: var(--ink); }
   .figure { position: relative; margin: 22px 0 0; max-width: 620px; }
   .figure .art { width: 100%; }
@@ -186,6 +189,20 @@
     titleWaves.push(WeightWave.attach(sec.querySelector('a.whole'), sec.querySelector('h2'), {
       rest: function () { return [500, 116]; }, hover: 700, peak: 130, sigma: 80, offset: 44, give: 0.045, focus: 760, freeze: true
     }));
+  });
+  // opening an item: the whole item turns bold for a moment, then the page follows
+  document.querySelectorAll('.sec a.whole').forEach(function (link, k) {
+    link.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // new tab or window: no delay
+      e.preventDefault();
+      link.classList.add('pressed'); titleWaves[k].press(true);
+      setTimeout(function () { location.href = link.href; }, Illus.reduced ? 0 : 280);
+    });
+  });
+  // coming back (including from the back/forward cache) shows the list at rest
+  addEventListener('pageshow', function () {
+    document.querySelectorAll('.sec a.whole.pressed').forEach(function (l) { l.classList.remove('pressed'); });
+    titleWaves.forEach(function (w) { w.press(false); });
   });
   // document positions of sections and titles, measured once and on resize, never while scrolling
   var secTop = [], headMid = [];

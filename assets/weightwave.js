@@ -56,13 +56,15 @@
        offset   -> crest position relative to the pointer, px (positive: to the right)
        give     -> stretch given back per unit of weight
        focus    -> even weight on keyboard focus
+       press    -> even weight while the item is being opened
        freeze   -> freeze line breaks */
   function attach(region, text, o) {
-    o = Object.assign({ hover: 600, peak: 260, sigma: 70, offset: 44, give: 0.045, focus: 760, freeze: false }, o);
-    var chars = split(text), mx = null, inside = false, focused = false, pinned = false, raf = 0;
+    o = Object.assign({ hover: 600, peak: 260, sigma: 70, offset: 44, give: 0.045, focus: 760, press: 860, freeze: false }, o);
+    var chars = split(text), mx = null, inside = false, focused = false, pinned = false, pressed = false, raf = 0;
     var r0 = o.rest();
     chars.forEach(function (c) { c.w = r0[0]; c.s = r0[1]; });
     function targetFor(c, rest) {
+      if (pressed) return o.press;
       if (focused) return o.focus;
       if (pinned && !inside) return Math.max(rest[0], o.hover); // held heavy without a pointer (e.g. centred on a phone)
       if (!inside || mx === null) return rest[0];
@@ -75,7 +77,8 @@
       for (var i = 0; i < chars.length; i++) {
         var c = chars[i], tw = targetFor(c, rest);
         var ts = rest[1] - (tw - rest[0]) * o.give;
-        var nw = c.w + (tw - c.w) * 0.16, ns = c.s + (ts - c.s) * 0.16;
+        var k = pressed ? 0.34 : 0.16;   // opening an item: the whole text turns heavy quickly
+        var nw = c.w + (tw - c.w) * k, ns = c.s + (ts - c.s) * k;
         if (Math.abs(tw - nw) < 0.6 && Math.abs(ts - ns) < 0.05) { nw = tw; ns = ts; } else moving = true;
         if (nw !== c.w || ns !== c.s) {
           c.w = nw; c.s = ns;
@@ -100,7 +103,8 @@
       (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(refreeze);
       var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(refreeze, 150); });
     }
-    return { refresh: kick, pin: function (on) { if (on !== pinned) { pinned = on; kick(); } } };
+    return { refresh: kick, pin: function (on) { if (on !== pinned) { pinned = on; kick(); } },
+      press: function (on) { if (on !== pressed) { pressed = on; kick(); } } };
   }
 
   window.WeightWave = { attach: attach, canHover: canHover };
