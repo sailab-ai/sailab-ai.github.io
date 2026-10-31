@@ -61,7 +61,7 @@
        freeze   -> freeze line breaks */
   function attach(region, text, o) {
     o = Object.assign({ hover: 600, peak: 260, sigma: 70, offset: 44, give: 0.045, focus: 760, press: 860, freeze: false }, o);
-    var chars = split(text), mx = null, inside = false, focused = false, pinned = false, pressed = false, raf = 0;
+    var chars = split(text), mx = null, inside = false, focused = false, pinned = false, pressed = false, touching = false, raf = 0;
     var r0 = o.rest();
     chars.forEach(function (c) { c.w = r0[0]; c.s = r0[1]; });
     function targetFor(c, rest) {
@@ -70,6 +70,10 @@
       if (pinned && !inside) return Math.max(rest[0], o.hover); // held heavy without a pointer (e.g. centred on a phone)
       if (!inside || mx === null) return rest[0];
       var r = c.el.getBoundingClientRect(), dx = (r.left + r.width / 2) - (mx + o.offset);
+      if (touching) {   // a finger on a small screen: the text drops to its resting weight and a taller, narrower crest rides under the finger
+        var sg = o.sigma * 0.7;
+        return rest[0] + (o.press - rest[0]) * Math.exp(-dx * dx / (2 * sg * sg));
+      }
       return Math.max(rest[0], o.hover) + o.peak * Math.exp(-dx * dx / (2 * o.sigma * o.sigma));
     }
     function tick() {
@@ -103,9 +107,9 @@
       addEventListener('touchmove', function (e) {
         var t = e.touches[0]; if (!t || !t0 || !pinned) return;
         if (!t0.side) { var dx = Math.abs(t.clientX - t0.x), dy = Math.abs(t.clientY - t0.y); if (dx < 8 || dx < dy * 1.2) return; t0.side = true; }
-        inside = true; mx = t.clientX; kick();
+        inside = true; touching = true; mx = t.clientX - o.offset * 0.5; kick();   // the crest sits just right of the fingertip, not under it
       }, { passive: true });
-      var lift = function () { if (t0 && t0.side) { inside = false; kick(); } t0 = null; };
+      var lift = function () { if (t0 && t0.side) { inside = false; touching = false; kick(); } t0 = null; };
       addEventListener('touchend', lift, { passive: true }); addEventListener('touchcancel', lift, { passive: true });
     }
     // even weight only for real keyboard focus: a click, a tap or coming back to the page never counts
